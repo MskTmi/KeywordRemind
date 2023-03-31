@@ -12,6 +12,8 @@
 
 ## 效果
 
+![XHQZHVM}TZ)FFZQZNO5@(S](https://user-images.githubusercontent.com/87525977/229135785-dab23536-a446-48e7-911d-e8e16566ad87.png)
+
 
 ## 指令
 | 指令                                                          | 描述          |
