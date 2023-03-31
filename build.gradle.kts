@@ -7,7 +7,7 @@ plugins {
 
 }
 
-group = "net.msktim"
+group = "net.msktmi"
 version = "1.0.0"
 
 repositories {

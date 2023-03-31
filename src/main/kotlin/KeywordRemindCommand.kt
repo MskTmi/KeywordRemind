@@ -1,4 +1,4 @@
-package net.msktim
+package net.msktmi
 
 import net.mamoe.mirai.console.command.*
 
@@ -27,23 +27,48 @@ object AddConfigCommand : CompositeCommand(KeywordRemind, "KeywordCommand", "key
         }
     }
 
-    @SubCommand("删除", "remove")
+    @SubCommand("删除", "remove", "del")
     suspend fun reConfig(context: CommandSender, keyword: String) {
         val userId = context.user?.id.toString()
-        context.sendMessage(KeywordRemindConfig.Config.filter { it.key == userId }.values.filter { it.keys.equals(keyword)}.toString())
-        if (KeywordRemindConfig.Config.filter { it.key == userId }.filter { it.key ==  keyword}.isNotEmpty()) {
-            KeywordRemindConfig.Config[userId]?.remove(keyword)
+        if (!KeywordRemindConfig.Config[userId]?.filterKeys { it == keyword }.isNullOrEmpty()) {
+            KeywordRemindConfig.Config[userId]?.remove(
+                KeywordRemindConfig.Config[userId]?.filterKeys {
+                    keyword in it.split("|")
+                }?.keys.toString()
+            )
             context.sendMessage("删除'${keyword}'成功")
         } else {
-            context.sendMessage("没有找到名称为'${keyword}'的集合")
+            context.sendMessage("没有找到名称为'${keyword}'的提醒词")
         }
     }
 
     @SubCommand("list", "列表")
     suspend fun configList(context: CommandSender) {
         var list = ""
-        KeywordRemindConfig.Config.forEach {
-            list += "$it\n\n"
+        val userId = context.user?.id
+
+        if (userId != null) {
+            val id = userId.toString()
+            KeywordRemindConfig.Config[id]?.forEach {
+                val at = emptyList<String>().toMutableList()
+                it.value.at.forEach {
+                    at += it
+                }
+                list += "${it.key}: ${it.value.reply}\nat: ${at}\n\n"
+            }
+            list = list.dropLast(2)
+        } else {
+            KeywordRemindConfig.Config.forEach {
+                val at = emptyList<String>().toMutableList()
+                val userid = it.key
+                it.value.forEach{
+                    it.value.at.forEach {
+                        at += it
+                    }
+                    list += "${userid}: \n${it.key}: ${it.value.reply}\nat: ${at}\n\n"
+                }
+            }
+            list = list.dropLast(2)
         }
         context.sendMessage(list)
     }

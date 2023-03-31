@@ -1,4 +1,4 @@
-package net.msktim
+package net.msktmi
 
 import net.mamoe.mirai.console.command.CommandManager
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescription
@@ -12,11 +12,11 @@ import net.mamoe.mirai.utils.info
 
 object KeywordRemind : KotlinPlugin(
     JvmPluginDescription(
-        id = "net.msktim.keyword-remind",
+        id = "net.msktmi.keyword-remind",
         name = "Keyword Remind",
-        version = "0.1.0",
+        version = "1.0.0",
     ) {
-        author("MskTim")
+        author("MskTmi")
     }
 ) {
     override fun onEnable() {
@@ -27,18 +27,20 @@ object KeywordRemind : KotlinPlugin(
         KeywordRemindConfig.reload()
         val eventChannel = GlobalEventChannel.parentScope(this)
         eventChannel.subscribeAlways<GroupMessageEvent> {
-            if (KeywordRemindConfig.Config.any { it.key.contains(this.sender.id.toString()) }) {
-                val reply = KeywordRemindConfig.Config[this.sender.id.toString()]!!.filter {
-                    message.contentToString() in it.key.split("|")
-                }
 
+            if (KeywordRemindConfig.Config.any { it.key.contains(this.sender.id.toString()) }) {
+                val reply = KeywordRemindConfig.Config[this.sender.id.toString()]!!.filterKeys {
+                    message.contentToString() == it
+                } + KeywordRemindConfig.Config[this.sender.id.toString()]!!.filterKeys {
+                    message.contentToString() in it.split("|")
+                }
+                //重优先回复无分隔符的内容
                 if (reply.isNotEmpty()) {
+                    val firstReply = reply.map { it.value }[0]
                     val chain = buildMessageChain {
-                        +PlainText(reply.values.map { it.reply }[0])
-                        reply.values.map {
-                            it.at.forEach {
-                                +At(it.toLong())
-                            }
+                        +PlainText(firstReply.reply)
+                        firstReply.at.forEach {
+                            +At(it.toLong())
                         }
                     }
                     group.sendMessage(chain)
