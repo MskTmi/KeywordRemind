@@ -15,14 +15,14 @@ object AddConfigCommand : CompositeCommand(KeywordRemind, "KeywordCommand", "key
                     list
                 )
             )) as MutableMap<String, KeywordRemindConfig.CustomForm>
-            context.sendMessage("添加成功：" + KeywordRemindConfig.Config.filter { it.key == userId }
-                .toString())
+            val reply = "添加成功：\n${userId}: \n${keyword}: ${reply}\nat: ${at}\n\n".dropLast(2)
+            context.sendMessage(reply)
         } catch (e: Exception) {
             if (KeywordRemindConfig.Config.filter { it.key == userId }.isEmpty()) {
                 //没有则新建后添加
                 newStrategy(userId, keyword, reply, list)
-                context.sendMessage("没有找到名称为'${keyword}'的集合\n已新建后添加：" + KeywordRemindConfig.Config.filter { it.key == keyword }
-                    .toString())
+                val reply = "已新建用户后添加：\n${userId}: \n${keyword}: ${reply}\nat: ${at}\n\n".dropLast(2)
+                context.sendMessage(reply)
             }
         }
     }
@@ -60,12 +60,12 @@ object AddConfigCommand : CompositeCommand(KeywordRemind, "KeywordCommand", "key
         } else {
             KeywordRemindConfig.Config.forEach {
                 val at = emptyList<String>().toMutableList()
-                val userid = it.key
+                val userId = it.key
                 it.value.forEach{
                     it.value.at.forEach {
                         at += it
                     }
-                    list += "${userid}: \n${it.key}: ${it.value.reply}\nat: ${at}\n\n"
+                    list += "${userId}: \n${it.key}: ${it.value.reply}\nat: ${at}\n\n"
                 }
             }
             list = list.dropLast(2)
