@@ -14,7 +14,7 @@ object KeywordRemind : KotlinPlugin(
     JvmPluginDescription(
         id = "net.msktmi.keyword-remind",
         name = "Keyword Remind",
-        version = "1.0.0",
+        version = "1.1.0",
     ) {
         author("MskTmi")
     }
@@ -27,23 +27,30 @@ object KeywordRemind : KotlinPlugin(
         KeywordRemindConfig.reload()
         val eventChannel = GlobalEventChannel.parentScope(this)
         eventChannel.subscribeAlways<GroupMessageEvent> {
-
-            if (KeywordRemindConfig.Config.any { it.key.contains(this.sender.id.toString()) }) {
-                val reply = KeywordRemindConfig.Config[this.sender.id.toString()]!!.filterKeys {
-                    message.contentToString() == it
-                } + KeywordRemindConfig.Config[this.sender.id.toString()]!!.filterKeys {
-                    message.contentToString() in it.split("|")
-                }
-                //重优先回复无分隔符的内容
-                if (reply.isNotEmpty()) {
-                    val firstReply = reply.map { it.value }[0]
-                    val chain = buildMessageChain {
-                        +PlainText(firstReply.reply)
-                        firstReply.at.forEach {
-                            +At(it.toLong())
-                        }
+            //本群是否有提醒内容
+            if (KeywordRemindConfig.Config.any { it.key.contains(this.group.id.toString()) }) {
+                //发言人是否需要提醒
+                val groupRemind = KeywordRemindConfig.Config[this.group.id.toString()]!!
+                if (groupRemind.any { it.key.contains(this.sender.id.toString()) }) {
+                    val reply = groupRemind[this.sender.id.toString()]!!.filterKeys {
+                        message.contentToString() == it
+                    } + groupRemind[this.sender.id.toString()]!!.filterKeys {
+                        message.contentToString() in it.split("|")
                     }
-                    group.sendMessage(chain)
+                    //重优先回复无分隔符的内容
+                    if (reply.isNotEmpty()) {
+                        val firstReply = reply.map { it.value }[0]
+                        val chain = buildMessageChain {
+                            +PlainText(firstReply.reply)
+                            firstReply.at.forEach {
+                                val atId = it?.toLongOrNull()
+                                if (atId != null) {
+                                    +At(atId)
+                                }
+                            }
+                        }
+                        group.sendMessage(chain)
+                    }
                 }
             }
             return@subscribeAlways
